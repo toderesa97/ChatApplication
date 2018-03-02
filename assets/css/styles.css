@@ -1,0 +1,78 @@
+.login_s {
+	border: 1px solid black;
+	border-radius: 5px;
+	padding: 10px;
+}
+
+.ion-alert-circled {
+	font-size: 30px;
+}
+
+.sender-msg {
+	display: block;
+	text-decoration: none;
+	width: 100%;
+	height: 40px;
+	border: 1px solid black;
+}
+
+
+.people p {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.people p:hover {
+	background-color: grey;
+	cursor: pointer;
+}
+
+.msg {
+	border: 1px solid grey;
+	border-radius: 2px;
+	width: 200px;
+}
+
+.by-sender { /* right */
+	background-color: #b3ecff;
+}
+
+
+.by-recipient { /* left */
+	background-color: #00cc44;
+}
+
+#show-text {
+	height: 300px;
+	border: 1px solid #8a8a5c;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.flex-left {
+	display: flex;
+	justify-content: flex-end;
+}
+
+
+.flex-right {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.msg-box {
+	width: 100%;
+	height: 60px;
+}
+
+.ion-person-add {
+	font-size: 30px;
+}
+
+.ion-person-add:hover {
+	color: grey;
+	cursor: pointer;
+}
