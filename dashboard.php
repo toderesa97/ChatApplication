@@ -5,11 +5,16 @@
 	if (! isset($_SESSION['username'])) {
 		header("Location: index.php");
 	}
+	$enableJTextField = "";
+	if (isset($_GET['create'])) {
+		$enableJTextField = "enabled";
+	}
+
 	$err = "";
 	$query = "";
 	if (isset($_POST['message']) && $_POST['message']!="") {
 		try {
-			$conn = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
+			$conn = Database::getPDO();
 			$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";
 			$conn->exec($query);
@@ -24,7 +29,7 @@
 	if (isset($_GET['sender'])) {
 		$info = null;
 		try {
-			$conn = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
+			$conn = Database::getPDO();
 			$query = "select * from messages where (sender='".$_SESSION['username']."' or recipient='".$_SESSION['username']."') and (sender='".$_GET['sender']."' or recipient='".$_GET['sender']."') order by time;";
 			$info = $conn->query($query);
 			$conn = null;
@@ -44,7 +49,7 @@
 					$messages .= '<div class="row"><div class="col-lg-12 flex-left"><p class="msg by-recipient">'.$key['msg'].'</p><i class="ion-chevron-right"></i></div></div>';
 				}
 			}
-		}
+		} 
 	}
 
 
@@ -66,29 +71,44 @@
 				<div id="search" class="form-group">
 					<input type="text" id="search-user" class="form-control" placeholder="Type user">
 					<i title="new message" class="ion-person-add" id="new-conver"></i>
-					
 				</div>
-				<?php
-					$info = null;
-					try {
-						$conn = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
-						$query = "select sender from messages where recipient='".$_SESSION['username']."' group by sender;";
-						$info = $conn->query($query);
-						$conn = null;
-						$info = $info->fetchAll(PDO::FETCH_ASSOC);	
-					} catch (Exception $ex) {
-						# this avoids displaying unnecessary information
-					}
-
-
-					if ($info) {
-						foreach ($info as $key) {
-							echo '<a class="sender-msg" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
+				<div id="suggestion" class="display-none">
+					<a href="#" class="sender-msg">Juani</a>
+				</div>
+				<div id="contacts">
+					<?php
+						$info = null;
+						$info2 = null;
+						try {
+							$conn = Database::getPDO();
+							$query = "select sender from messages where recipient='".$_SESSION['username']."' group by sender;";
+							$info = $conn->query($query);
+							$query = "select recipient from messages where sender='".$_SESSION['username']."' group by recipient;";
+							$info2 = $conn->query($query);
+							$conn = null;
+							$info2 = $info2->fetchAll(PDO::FETCH_ASSOC);	
+						} catch (Exception $ex) {
+							# this avoids displaying unnecessary information
 						}
-					} else {
-						sleep(0.5);
-					}
-				?>
+
+						$userss = "";
+						if ($info) {
+							foreach ($info as $key) {
+								echo '<a class="sender-msg" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
+								$userss .= $key['sender']."--";
+							}
+						} 
+						if ($info2) {
+							foreach ($info2 as $key) {
+								if (strpos($userss, $key['recipient']) !== false) {
+									continue;
+								}
+								echo '<a class="sender-msg" href="dashboard.php?sender='.$key['recipient'].'">'.$key['recipient'].'</a>';
+							}
+						} 
+
+					?>
+				</div>
 			</div>
 			<div class="col-lg-9 message-area">
 				<div id="show-text">
@@ -97,6 +117,12 @@
 				<?php if($messages != ""): ?>
 					<form action="dashboard.php?sender=<?php echo $_GET['sender'] ?>" method="POST">
 						<input class="msg-box" type="text" name="message" placeholder="<?php echo 'Write a message to '.$_GET["sender"].''; ?>"><br>
+						<input class="btn btn-primary" type="submit" value="Send">
+					</form> 
+				<?php endif; ?>
+				<?php if($enableJTextField != ""): ?>
+					<form action="dashboard.php?sender=<?php echo $_GET['create'] ?>" method="POST">
+						<input class="msg-box" type="text" name="message" placeholder="<?php echo 'Write a message to '.$_GET["create"].''; ?>"><br>
 						<input class="btn btn-primary" type="submit" value="Send">
 					</form> 
 				<?php endif; ?>

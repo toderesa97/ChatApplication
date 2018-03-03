@@ -84,8 +84,33 @@
 #search {
 	display: flex;
 	justify-content: space-between;
+	margin-bottom: 0;
 }
 
 #search-user {
 	display: none;
+}
+
+#suggestion {
+	width: 80%;
+	background-color: #e6e6e6;
+	border: 1px solid black;
+	position: absolute;
+}
+
+.display-none {
+	display: none;
+}
+
+.display-block {
+	display: block;
+}
+
+#contacts {
+	padding-top: 10px;
+	z-index: 1;
+}
+
+.people {
+	position: relative;
 }

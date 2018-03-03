@@ -1,4 +1,5 @@
 <?php
+	session_start();
 	if (isset($_GET['name'])) {
 		// generate the code here!
 		$info = null;
@@ -12,12 +13,15 @@
 			# this avoids displaying unnecessary information
 		}
 
-		$suggestions = "";
+		$suggestions = '<div class="sug-users">';
 		if ($info) {
 			foreach ($info as $key) {
-				$suggestions .= $key['username']."-"; // so far this point the thing is working!
+				if ($key['username'] == $_SESSION['username']) {
+					continue;
+				}
+				$suggestions .= '<a href="dashboard.php?create='.$key['username'].'" class="sender-msg">'.$key['username'].'</a>';
 			}
 		} 
-		echo $suggestions;
+		echo $suggestions."</div>";
 	}
 ?>
