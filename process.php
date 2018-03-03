@@ -1,10 +1,11 @@
 <?php
+	include_once 'lib.php';
 	session_start();
 	if (isset($_GET['name'])) {
 		// generate the code here!
 		$info = null;
 		try {
-			$conn = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
+			$conn = Database::getPDO();
 			$query = "select * from usuarios where username like '".$_GET['name']."%';";
 			$info = $conn->query($query);
 			$conn = null;

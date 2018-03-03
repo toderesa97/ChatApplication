@@ -2,14 +2,18 @@
 
 class Database {
 
+	private static $pdo = null;
 	public static function getPDO() {
-		$pdo = null;
 		try {
-			$pdo = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
+			if (Database::$pdo == null) {
+				Database::$pdo = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
+			} else {
+				return Database::$pdo;
+			}
 		} catch(Exception $e) {
-			$pdo = null;
+			Database::$pdo = null;
 		}
-		return $pdo;
+		return Database::$pdo;
 	}
 
 	/* method fetchs directly all the query inserted by user */
@@ -18,7 +22,7 @@ class Database {
 
 		$info = null;
 		try {
-			$conn = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
+			$conn = Database::getPDO();
 			$query = "select * from usuarios where username='$user';";
 			$info = $conn->query($query);
 			$conn = null;
