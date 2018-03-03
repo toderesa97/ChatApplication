@@ -11,33 +11,20 @@
 	}
 
 	$err = "";
-	$query = "";
+	
+	Database::getPDO(); // this line must be executed to create the PDO instance. Singleton pattern.
+
 	if (isset($_POST['message']) && $_POST['message']!="") {
-		try {
-			$conn = Database::getPDO();
-			$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";
-			$conn->exec($query);
-			$conn = null;
-		} catch (Exception $ex) {
-			$err = "Could not send message.";
-		}
+		$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";
+		Database::exec($query);
 	}
+
 
 	$messages = "";
 	
 	if (isset($_GET['sender'])) {
-		$info = null;
-		try {
-			$conn = Database::getPDO();
-			$query = "select * from messages where (sender='".$_SESSION['username']."' or recipient='".$_SESSION['username']."') and (sender='".$_GET['sender']."' or recipient='".$_GET['sender']."') order by time;";
-			$info = $conn->query($query);
-			$conn = null;
-			$info = $info->fetchAll(PDO::FETCH_ASSOC);	
-		} catch (Exception $ex) {
-			# this avoids displaying unnecessary information
-			
-		}
+		$q = "select * from messages where (sender='".$_SESSION['username']."' or recipient='".$_SESSION['username']."') and (sender='".$_GET['sender']."' or recipient='".$_GET['sender']."') order by time;";
+		$info = Database::query($q);
 
 
 		if ($info) {
@@ -77,19 +64,8 @@
 				</div>
 				<div id="contacts">
 					<?php
-						$info = null;
-						$info2 = null;
-						try {
-							$conn = Database::getPDO();
-							$query = "select sender from messages where recipient='".$_SESSION['username']."' group by sender;";
-							$info = $conn->query($query);
-							$query = "select recipient from messages where sender='".$_SESSION['username']."' group by recipient;";
-							$info2 = $conn->query($query);
-							$conn = null;
-							$info2 = $info2->fetchAll(PDO::FETCH_ASSOC);	
-						} catch (Exception $ex) {
-							# this avoids displaying unnecessary information
-						}
+						$info = Database::query("select sender from messages where recipient='".$_SESSION['username']."' group by sender;");
+						$info2 = Database::query("select recipient from messages where sender='".$_SESSION['username']."' group by recipient;");
 
 						$userss = "";
 						if ($info) {

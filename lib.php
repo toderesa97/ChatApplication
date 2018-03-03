@@ -3,6 +3,7 @@
 class Database {
 
 	private static $pdo = null;
+	
 	public static function getPDO() {
 		try {
 			if (Database::$pdo == null) {
@@ -19,18 +20,8 @@ class Database {
 	/* method fetchs directly all the query inserted by user */
 	public static function check($user, $pass) {
 		$pass = strtoupper(hash("sha256", $pass));
-
-		$info = null;
-		try {
-			$conn = Database::getPDO();
-			$query = "select * from usuarios where username='$user';";
-			$info = $conn->query($query);
-			$conn = null;
-			$info = $info->fetchAll(PDO::FETCH_ASSOC);	
-		} catch (Exception $ex) {
-			# this avoids displaying unnecessary information
-		}
-
+		$query = "select * from usuarios where username='$user';";
+		$info = Database::query($query);
 
 		if ($info) {
 			foreach ($info as $key) {
@@ -45,6 +36,21 @@ class Database {
 		}
 		return false;
 	}	
+
+	public static function query($query) {
+		if (Database::$pdo == null) {
+			return null;
+		}
+		$info = Database::$pdo->query($query);
+		return $info->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	public static function exec($query) {
+		if (Database::$pdo == null) {
+			return;
+		}
+		Database::$pdo->exec($query);
+	}
 }
 
 ?>

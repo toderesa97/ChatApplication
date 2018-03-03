@@ -2,6 +2,9 @@
 	include_once 'lib.php';
 
 	session_start();
+	
+	Database::getPDO();
+
 	if (isset($_SESSION['username'])) {
 		header("Location: dashboard.php");
 	}
