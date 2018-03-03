@@ -43,7 +43,6 @@
 				} else {
 					$messages .= '<div class="row"><div class="col-lg-12 flex-left"><p class="msg by-recipient">'.$key['msg'].'</p><i class="ion-chevron-right"></i></div></div>';
 				}
-
 			}
 		}
 	}
@@ -63,8 +62,12 @@
 	<div class="container">
 		<p>Welcome <?php echo $_SESSION['username']; ?> (<a href="logout.php">logout</a>)</p>
 		<div class="row">
-			<div class="col-lg-2 people">
-				<i title="new message" class="ion-person-add"></i>
+			<div class="col-lg-3 people">
+				<div id="search" class="form-group">
+					<input type="text" id="search-user" class="form-control" placeholder="Type user">
+					<i title="new message" class="ion-person-add" id="new-conver"></i>
+					
+				</div>
 				<?php
 					$info = null;
 					try {
@@ -87,7 +90,7 @@
 					}
 				?>
 			</div>
-			<div class="col-lg-10 message-area">
+			<div class="col-lg-9 message-area">
 				<div id="show-text">
 					<?php if($messages != ""){ echo $messages;} ?>
 				</div>
@@ -109,10 +112,6 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-	<script>
-		$(document).ready(function(){
-   			$('#show-text').scrollTop($('#show-text')[0].scrollHeight);
-		});
-	</script>
+	<script src="assets/js/lib.js"></script>
 </body>
 </html>

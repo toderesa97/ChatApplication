@@ -80,3 +80,12 @@
 	color: grey;
 	cursor: pointer;
 }
+
+#search {
+	display: flex;
+	justify-content: space-between;
+}
+
+#search-user {
+	display: none;
+}
