@@ -59,12 +59,14 @@
 .flex-left {
 	display: flex;
 	justify-content: flex-end;
+	align-items: baseline;
 }
 
 
 .flex-right {
 	display: flex;
 	justify-content: flex-start;
+	align-items: baseline;
 }
 
 .msg-box {
@@ -96,6 +98,7 @@
 	background-color: #e6e6e6;
 	border: 1px solid black;
 	position: absolute;
+	z-index: 1;
 }
 
 .display-none {
@@ -113,4 +116,24 @@
 
 .people {
 	position: relative;
+}
+
+.msg-time {
+	font-family: "Times New Roman", Arial;
+	font-size: 12px;
+}
+
+.ion-android-delete {
+	font-size: 25px;
+	padding-left: 20px;
+	color: black;
+}
+
+#chat-cong {
+	display: flex;
+	align-items: center;
+}
+
+.active {
+	background-color: #c5cbd6;
 }

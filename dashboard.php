@@ -14,12 +14,20 @@
 	
 	Database::getPDO(); // this line must be executed to create the PDO instance. Singleton pattern.
 
+	if (isset($_GET['erase'])) {
+		$q = "delete from messages where sender='".$_SESSION['username']."' and recipient='".$_GET['erase']."';";
+		Database::exec($q);
+		$q = "delete from messages where sender='".$_GET['erase']."' and recipient='".$_SESSION['username']."';";
+		Database::exec($q);
+	}
+
+	/* creating and/or sending a message */
 	if (isset($_POST['message']) && $_POST['message']!="") {
 		$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";
 		Database::exec($query);
 	}
 
-
+	/* retrieving messages given two parts */
 	$messages = "";
 	
 	if (isset($_GET['sender'])) {
@@ -31,9 +39,9 @@
 			foreach ($info as $key) {
 				// messages sent by sender (the user logged in) are colored in blue whereas the sent back by the recipient in grey.
 				if ($key['recipient'] == $_SESSION['username']) { 
-					$messages .= '<div class="row"><div class="col-lg-12 flex-right"><i class="ion-chevron-left"></i><p class="msg by-sender">'.$key['msg'].'</p></div></div>';
+					$messages .= '<div class="row"><div class="col-lg-12 flex-right"><i class="ion-chevron-left"></i><p class="msg by-sender">'.$key['msg'].'</p><p class="msg-time">'.$key['time'].'</p></div></div>';
 				} else {
-					$messages .= '<div class="row"><div class="col-lg-12 flex-left"><p class="msg by-recipient">'.$key['msg'].'</p><i class="ion-chevron-right"></i></div></div>';
+					$messages .= '<div class="row"><div class="col-lg-12 flex-left"><p class="msg-time">'.$key['time'].'</p><p class="msg by-recipient">'.$key['msg'].'</p><i class="ion-chevron-right"></i></div></div>';
 				}
 			}
 		} 
@@ -68,9 +76,19 @@
 						$info2 = Database::query("select recipient from messages where sender='".$_SESSION['username']."' group by recipient;");
 
 						$userss = "";
+						if (isset($_GET['sender'])) {
+							$act = $_GET['sender'];
+						} else {
+							$act = "";
+						}
 						if ($info) {
 							foreach ($info as $key) {
-								echo '<a class="sender-msg" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
+								if ($act == $key['sender']) {
+									echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
+								} else {
+									echo '<a class="sender-msg" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
+									
+								}
 								$userss .= $key['sender']."--";
 							}
 						} 
@@ -79,7 +97,12 @@
 								if (strpos($userss, $key['recipient']) !== false) {
 									continue;
 								}
-								echo '<a class="sender-msg" href="dashboard.php?sender='.$key['recipient'].'">'.$key['recipient'].'</a>';
+								if ($act == $key['recipient']) {
+									echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['recipient'].'">'.$key['recipient'].'</a>';
+								} else {
+
+									echo '<a class="sender-msg" href="dashboard.php?sender='.$key['recipient'].'">'.$key['recipient'].'</a>';
+								}
 							}
 						} 
 
@@ -93,7 +116,10 @@
 				<?php if($messages != ""): ?>
 					<form action="dashboard.php?sender=<?php echo $_GET['sender'] ?>" method="POST">
 						<input class="msg-box" type="text" name="message" placeholder="<?php echo 'Write a message to '.$_GET["sender"].''; ?>"><br>
-						<input class="btn btn-primary" type="submit" value="Send">
+						<div id="chat-cong">
+							<input class="btn btn-primary" type="submit" value="Send">
+							<a href="dashboard.php?erase=<?php echo $_GET['sender'] ?>"><i class="ion-android-delete" title="Delete chat"></i></a>
+						</div>
 					</form> 
 				<?php endif; ?>
 				<?php if($enableJTextField != ""): ?>
