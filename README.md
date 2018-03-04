@@ -11,7 +11,7 @@ The aim of these commits is to create a first viable version.
 
 Any contributor will be welcomed :).
 
-Some screenshots of the current version:
+Some screenshots of a previous version: 
 
 ## Login
 
@@ -33,4 +33,14 @@ Some screenshots of the current version:
 
 ![whatjuansee](https://user-images.githubusercontent.com/19231158/36937069-19382446-1f0e-11e8-87df-851bfb5d0254.PNG)
 
+Screenshots of new version:
 
+A conversation is deleted if and only if both parts do agree. 
+
+![gnralconver](https://user-images.githubusercontent.com/19231158/36948418-c2caadea-1fda-11e8-9d99-79c09c6ad587.PNG)
+
+![deletionmodal](https://user-images.githubusercontent.com/19231158/36948417-c2a855c4-1fda-11e8-9b5f-fb83341c600d.PNG)
+
+![aftersendingdeletion](https://user-images.githubusercontent.com/19231158/36948416-c286727e-1fda-11e8-8feb-c5de5020dc65.PNG)
+
+![rooterseerootwantstodelete](https://user-images.githubusercontent.com/19231158/36948415-c25dc806-1fda-11e8-82d8-d36d08937c16.PNG)
