@@ -61,7 +61,7 @@
 					// do nothing.
 					$err = "Pending a deletion request.";
 				} else {
-					$q = "insert into ".$key['conversation']." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
+					$q = "insert into ".$key['conversation']." (sender, recipient, msg, time) values ('".$u."','".$s."','".mysql_real_escape_string(htmlspecialchars($_POST['message']))."',now());";
 					Database::exec($q);
 				}
 				
