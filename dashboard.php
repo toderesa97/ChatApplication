@@ -49,7 +49,7 @@
 
 	$table = "";
 	/* creating and/or sending a message */
-	if (isset($_POST['message']) && $_POST['message']!="") {
+	if (isset($_POST['message']) && $_POST['message']!="" && Database::exists($_GET['sender'])) {
 		$s = $_GET['sender'];
 		$u = $_SESSION['username'];
 		$q = "select * from chats where conversation='con_".$s."_".$u."' or conversation='con_".$u."_".$s."'";
@@ -74,6 +74,12 @@
 			Database::exec($q);
 			$q = "insert into ".$table." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
 			Database::exec($q);
+		}
+	} else {
+		if (isset($_GET['sender'])) {
+			if (! Database::exists($_GET['sender'])) {
+				$err .= "\nUser does not exist";
+			}
 		}
 	}
 

@@ -37,6 +37,16 @@ class Database {
 		return false;
 	}	
 
+	public static function exists($user) {
+		$query = "select * from usuarios where username='$user';";
+		$info = Database::query($query);
+
+		if ($info) {
+			return true;
+		} 
+		return false;
+	}
+
 	public static function query($query) {
 		if (Database::$pdo == null) {
 			return null;
