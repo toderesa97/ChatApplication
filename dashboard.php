@@ -16,20 +16,54 @@
 
 	if (isset($_GET['erase'])) {
 		// pending
+		$e = $_GET['erase'];
+		$u = $_SESSION['username'];
+		$q = sprintf("select * from chats where (part1='%s' and part2='%s') or (part1='%s' and part2='%s');",$e, $u, $u, $e);
+		$info = Database::query($q);
+		$conver = "";
+		if ($info) {
+			
+			foreach($info as $key) { 
+				$conver = $key['conversation']; 
+				if ($key['part1'] == $u) {
+					$q ="update chats set consent_of_deletion_p1='1' where conversation='$conver';";
+					Database::exec($q);
+				} else { // $key['part1'] == $e (started by the other part)
+					$q = "update chats set consent_of_deletion_p2='1' where conversation='$conver';";
+					Database::exec($q);
+				}
+				
+			}
+		}
+		$info = Database::query("select * from chats where conversation='$conver';");
+		if ($info) {
+			foreach($info as $key) {		
+				if ($key['consent_of_deletion_p2']=='1' && $key['consent_of_deletion_p1']=='1') {
+					$q = sprintf("delete from chats where conversation='%s'", $key['conversation']);
+					Database::exec($q);
+					Database::exec(sprintf("drop table %s", $key['conversation']));
+				}
+			}
+		}
 	}
 
+	$table = "";
 	/* creating and/or sending a message */
 	if (isset($_POST['message']) && $_POST['message']!="") {
-		/*$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";*/
 		$s = $_GET['sender'];
 		$u = $_SESSION['username'];
-		$q = "select part1,part2,conversation from chats where conversation='con_".$s."_".$u."' or conversation='con_".$u."_".$s."'";
+		$q = "select * from chats where conversation='con_".$s."_".$u."' or conversation='con_".$u."_".$s."'";
 		$info = Database::query($q);
 		if ($info) {
 			// chat exist, hence, insertion
 			foreach ($info as $key) {
-				$q = "insert into ".$key['conversation']." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
-				Database::exec($q);
+				if ($key['consent_of_deletion_p2'] == '1' || $key['consent_of_deletion_p1'] == '1') {
+					// do nothing.
+					$err = "Pending a deletion request.";
+				} else {
+					$q = "insert into ".$key['conversation']." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
+					Database::exec($q);
+				}
 				
 			}
 		} else {
@@ -45,16 +79,37 @@
 
 	/* retrieving messages given two parts */
 	$messages = "";
-	
+	$deletion_req = "";
+	$triggered_by = "";
 	if (isset($_GET['sender'])) {
 		$s = $_GET['sender'];
 		$u = $_SESSION['username'];
-		$q = "select conversation from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
+		$q = "select * from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
 		$info = Database::query($q);
-		$table = "";
+		
 		if ($info) {
 			foreach($info as $key) {
 				$table = $key['conversation'];
+				
+				if ($key['consent_of_deletion_p1'] == '1' || $key['consent_of_deletion_p2'] == '1') {
+					if ($key['part1'] == $u && $key['consent_of_deletion_p1'] == '1') {
+						$deletion_req = "You have requested a deletion.";
+						$triggered_by = $u;
+					}
+					if ($key['part2'] == $u && $key['consent_of_deletion_p2'] == '1') {
+						$deletion_req = "You have requested a deletion.";
+						$triggered_by = $u;
+					}
+					if ($key['part1'] == $s && $key['consent_of_deletion_p1'] == '1') {
+						$deletion_req = sprintf("%s has requested a deletion.", $key['part1']);
+						$triggered_by = $s;
+					}
+					if ($key['part2'] == $s && $key['consent_of_deletion_p2'] == '1') {
+						$deletion_req = sprintf("%s has requested a deletion.", $key['part2']);
+						$triggered_by = $s;
+					}	
+				}
+				
 			}
 		}
 		$q = "select * from ".$table." order by time;";
@@ -70,6 +125,40 @@
 				}
 			}
 		} 
+
+	}
+	
+	if(isset($_GET['cancel'])) {
+
+		$s = $_GET['cancel'];
+		$u = $_SESSION['username'];
+		$q = "select * from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
+		$info = Database::query($q);
+		if ($info) {
+			foreach($info as $key) {
+				$table = $key['conversation'];
+			}
+		}
+
+		$q = "select * from chats where conversation='$table';";
+		
+		$info = Database::query($q);
+		$u = $_SESSION['username'];
+		$e = $_GET['cancel'];
+		if ($info) {
+			foreach($info as $key) {
+				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$u) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$u)) {
+					// the logged user cancels a deletion request.
+					$q = "update chats set consent_of_deletion_p1='0',consent_of_deletion_p2='0' where conversation='$table';";
+					Database::exec($q);
+				}
+				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$e) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$e)) {
+					// the logged user cancels a deletion request.
+					$q = "update chats set consent_of_deletion_p1='0',consent_of_deletion_p2='0' where conversation='$table';";
+					Database::exec($q);
+				}
+			}
+		}
 	}
 ?>
 
@@ -83,6 +172,7 @@
 </head>
 <body>
 	<div class="container">
+		
 		<p>Welcome <?php echo $_SESSION['username']; ?> (<a href="logout.php">logout</a>)</p>
 		<div class="row">
 			<div class="col-lg-3 people">
@@ -97,7 +187,7 @@
 					<?php
 						$p1 = $_SESSION['username'];
 						
-						$q = "select part1, part2 from chats where part1='".$p1."' or part2='".$p1."';";
+						$q = "select part1, part2 from chats where part1='".$p1."' or part2='".$p1."' order by creation_date;";
 						$info = Database::query($q);
 
 						/* echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';*/
@@ -130,14 +220,27 @@
 			<div class="col-lg-9 message-area">
 				<div id="show-text">
 					<?php if($messages != ""){ echo $messages;} ?>
+					
 				</div>
 				<?php if($messages != ""): ?>
 					<form action="dashboard.php?sender=<?php echo $_GET['sender'] ?>" method="POST">
-						<input class="msg-box" type="text" name="message" placeholder="<?php echo 'Write a message to '.$_GET["sender"].''; ?>"><br>
-						<div id="chat-cong">
-							<input class="btn btn-primary" type="submit" value="Send">
-							<a href="dashboard.php?erase=<?php echo $_GET['sender'] ?>"><i class="ion-android-delete" title="Delete chat"></i></a>
-						</div>
+						<?php if ($deletion_req == ""): ?>
+							<input class="msg-box" type="text" name="message" placeholder="<?php echo 'Write a message to '.$_GET["sender"].''; ?>"><br>
+							<div id="chat-cong">
+								<input class="btn btn-primary" type="submit" value="Send">&nbsp;
+								
+								<input id="delete-btn" type="button" class="btn btn-danger" data-toggle="modal" data-target="exampleModal" title="Delete chat" value="Delete" data-recp="<?php echo $_GET['sender'] ?>">
+								
+							</div>
+						<?php endif; ?>
+						<?php if ($deletion_req != ""): ?>
+							<input class="msg-box" type="text" name="message" placeholder="<?php echo $deletion_req; ?>" disabled><br>
+							<div id="chat-cong">
+								<input id="delete-btn" type="button" class="btn btn-danger" data-toggle="modal" data-target="exampleModal" title="Delete chat" value="Delete" data-recp="<?php echo $_GET['sender'] ?>">&nbsp;
+								<a href="dashboard.php?cancel=<?php echo $_GET['sender'] ?>"> Cancel request</a>
+							</div>
+						<?php endif; ?>
+						
 					</form> 
 				<?php endif; ?>
 				<?php if($enableJTextField != ""): ?>
@@ -153,6 +256,29 @@
 		      	<?php endif; ?>
 			</div>
 		</div>
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel"></h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        By clicking Yes it does not mean that you are deleting the conversation. The other part may have to accept the request of deletion.
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">I mistook!</button>
+	        
+	        <a href="#" id="sub-btn-del"><button type="submit" class="btn btn-warning" >Send request of deletion</button></a>
+	        
+	      </div>
+	    </div>
+	  </div>
 	</div>
 	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

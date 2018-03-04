@@ -124,14 +124,14 @@
 }
 
 .ion-android-delete {
-	font-size: 25px;
-	padding-left: 20px;
+	font-size: 15px;
 	color: black;
 }
 
 #chat-cong {
 	display: flex;
 	align-items: center;
+	padding-top: 5px;
 }
 
 .active {

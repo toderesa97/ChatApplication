@@ -30,5 +30,12 @@ $(document).ready(function(){
 		}
 	});
 
+	$('#delete-btn').click(function() {
+		var rec = $('#delete-btn').attr('data-recp');
+		
+		$('#exampleModalLabel').html(`Sure you want to delete chat with ${rec}?`);
+		$('#sub-btn-del').attr('href', `dashboard.php?erase=${rec}`);
+		$('#exampleModal').modal('show');
+	});
 
 });
