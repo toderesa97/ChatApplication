@@ -3,7 +3,7 @@
 class Database {
 
 	private static $pdo = null;
-	
+
 	public static function getPDO() {
 		try {
 			if (Database::$pdo == null) {
@@ -42,7 +42,11 @@ class Database {
 			return null;
 		}
 		$info = Database::$pdo->query($query);
-		return $info->fetchAll(PDO::FETCH_ASSOC);
+		if ($info) {
+			return $info->fetchAll(PDO::FETCH_ASSOC);
+		} else {
+			return null;
+		}
 	}
 
 	public static function exec($query) {

@@ -15,25 +15,50 @@
 	Database::getPDO(); // this line must be executed to create the PDO instance. Singleton pattern.
 
 	if (isset($_GET['erase'])) {
-		$q = "delete from messages where sender='".$_SESSION['username']."' and recipient='".$_GET['erase']."';";
-		Database::exec($q);
-		$q = "delete from messages where sender='".$_GET['erase']."' and recipient='".$_SESSION['username']."';";
-		Database::exec($q);
+		// pending
 	}
 
 	/* creating and/or sending a message */
 	if (isset($_POST['message']) && $_POST['message']!="") {
-		$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";
-		Database::exec($query);
+		/*$query = "insert into messages (sender, recipient, msg, time) values ('".$_SESSION['username']."','".$_GET['sender']."','".$_POST['message']."',now());";*/
+		$s = $_GET['sender'];
+		$u = $_SESSION['username'];
+		$q = "select part1,part2,conversation from chats where conversation='con_".$s."_".$u."' or conversation='con_".$u."_".$s."'";
+		$info = Database::query($q);
+		if ($info) {
+			// chat exist, hence, insertion
+			foreach ($info as $key) {
+				$q = "insert into ".$key['conversation']." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
+				Database::exec($q);
+				
+			}
+		} else {
+			$table = "con_".$u."_".$s;
+			$q = "create table ".$table." (sender varchar(60) not null, recipient varchar(60) not null, msg text not null, time timestamp);";
+			Database::exec($q);
+			$q = "insert into chats (part1, part2, conversation, consent_of_deletion_p1,consent_of_deletion_p2) values ('".$u."', '".$s."', '".$table."', '0', '0');";
+			Database::exec($q);
+			$q = "insert into ".$table." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
+			Database::exec($q);
+		}
 	}
 
 	/* retrieving messages given two parts */
 	$messages = "";
 	
 	if (isset($_GET['sender'])) {
-		$q = "select * from messages where (sender='".$_SESSION['username']."' or recipient='".$_SESSION['username']."') and (sender='".$_GET['sender']."' or recipient='".$_GET['sender']."') order by time;";
+		$s = $_GET['sender'];
+		$u = $_SESSION['username'];
+		$q = "select conversation from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
 		$info = Database::query($q);
-
+		$table = "";
+		if ($info) {
+			foreach($info as $key) {
+				$table = $key['conversation'];
+			}
+		}
+		$q = "select * from ".$table." order by time;";
+		$info = Database::query($q);
 
 		if ($info) {
 			foreach ($info as $key) {
@@ -46,8 +71,6 @@
 			}
 		} 
 	}
-
-
 ?>
 
 <!DOCTYPE html>
@@ -72,39 +95,34 @@
 				</div>
 				<div id="contacts">
 					<?php
-						$info = Database::query("select sender from messages where recipient='".$_SESSION['username']."' group by sender;");
-						$info2 = Database::query("select recipient from messages where sender='".$_SESSION['username']."' group by recipient;");
+						$p1 = $_SESSION['username'];
+						
+						$q = "select part1, part2 from chats where part1='".$p1."' or part2='".$p1."';";
+						$info = Database::query($q);
 
-						$userss = "";
+						/* echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';*/
+						$active="";
 						if (isset($_GET['sender'])) {
-							$act = $_GET['sender'];
-						} else {
-							$act = "";
+							$active = $_GET['sender'];
 						}
 						if ($info) {
 							foreach ($info as $key) {
-								if ($act == $key['sender']) {
-									echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
+								if ($key['part1'] == $p1) {
+									if ($active == $key['part2']) {
+										echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['part2'].'">'.$key['part2'].'</a>';
+									} else {
+										echo '<a class="sender-msg" href="dashboard.php?sender='.$key['part2'].'">'.$key['part2'].'</a>';
+									}
 								} else {
-									echo '<a class="sender-msg" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';
-									
-								}
-								$userss .= $key['sender']."--";
-							}
-						} 
-						if ($info2) {
-							foreach ($info2 as $key) {
-								if (strpos($userss, $key['recipient']) !== false) {
-									continue;
-								}
-								if ($act == $key['recipient']) {
-									echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['recipient'].'">'.$key['recipient'].'</a>';
-								} else {
+									if ($active == $key['part1']) {
+										echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['part1'].'">'.$key['part1'].'</a>';
 
-									echo '<a class="sender-msg" href="dashboard.php?sender='.$key['recipient'].'">'.$key['recipient'].'</a>';
+									} else {
+										echo '<a class="sender-msg" href="dashboard.php?sender='.$key['part1'].'">'.$key['part1'].'</a>';										
+									}
 								}
 							}
-						} 
+						}
 
 					?>
 				</div>
