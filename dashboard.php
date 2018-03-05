@@ -16,7 +16,7 @@
 
 	if (isset($_GET['erase'])) {
 		// pending
-		$e = $_GET['erase'];
+		$e = htmlspecialchars(mysql_real_escape_string($_GET['erase']));
 		$u = $_SESSION['username'];
 		$q = sprintf("select * from chats where (part1='%s' and part2='%s') or (part1='%s' and part2='%s');",$e, $u, $u, $e);
 		$info = Database::query($q);
@@ -50,10 +50,11 @@
 	$table = "";
 	/* creating and/or sending a message */
 	if (isset($_POST['message']) && $_POST['message']!="" && Database::exists($_GET['sender'])) {
-		$s = $_GET['sender'];
+		$s = htmlspecialchars(mysql_real_escape_string($_GET['sender']));
 		$u = $_SESSION['username'];
-		$q = "select * from chats where conversation='con_".$s."_".$u."' or conversation='con_".$u."_".$s."'";
+		$q = sprintf("select * from chats where conversation='con_%s_%s' or conversation='con_%s_%s'", $s, $u, $u, $s);
 		$info = Database::query($q);
+		
 		if ($info) {
 			// chat exist, hence, insertion
 			foreach ($info as $key) {
@@ -67,12 +68,12 @@
 				
 			}
 		} else {
-			$table = "con_".$u."_".$s;
-			$q = "create table ".$table." (sender varchar(60) not null, recipient varchar(60) not null, msg text not null, time timestamp);";
+			$table = sprintf("con_%s_%s", $u, $s);
+			$q = "create table $table (sender varchar(60) not null, recipient varchar(60) not null, msg text not null, time timestamp);";
 			Database::exec($q);
-			$q = "insert into chats (part1, part2, conversation, consent_of_deletion_p1,consent_of_deletion_p2) values ('".$u."', '".$s."', '".$table."', '0', '0');";
+			$q = "insert into chats (part1, part2, conversation, consent_of_deletion_p1,consent_of_deletion_p2) values ('$u', '$s', '$table', '0', '0');";
 			Database::exec($q);
-			$q = "insert into ".$table." (sender, recipient, msg, time) values ('".$u."','".$s."','".$_POST['message']."',now());";
+			$q = sprintf("insert into $table (sender, recipient, msg, time) values ('$u','$s','%s',now());", mysql_real_escape_string(htmlspecialchars($_POST['message'])));
 			Database::exec($q);
 		}
 	} else {
@@ -86,9 +87,8 @@
 	/* retrieving messages given two parts */
 	$messages = "";
 	$deletion_req = "";
-	$triggered_by = "";
 	if (isset($_GET['sender'])) {
-		$s = $_GET['sender'];
+		$s = mysql_real_escape_string(htmlspecialchars($_GET['sender']));
 		$u = $_SESSION['username'];
 		$q = "select * from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
 		$info = Database::query($q);
@@ -100,19 +100,15 @@
 				if ($key['consent_of_deletion_p1'] == '1' || $key['consent_of_deletion_p2'] == '1') {
 					if ($key['part1'] == $u && $key['consent_of_deletion_p1'] == '1') {
 						$deletion_req = "You have requested a deletion.";
-						$triggered_by = $u;
 					}
 					if ($key['part2'] == $u && $key['consent_of_deletion_p2'] == '1') {
 						$deletion_req = "You have requested a deletion.";
-						$triggered_by = $u;
 					}
 					if ($key['part1'] == $s && $key['consent_of_deletion_p1'] == '1') {
 						$deletion_req = sprintf("%s has requested a deletion.", $key['part1']);
-						$triggered_by = $s;
 					}
 					if ($key['part2'] == $s && $key['consent_of_deletion_p2'] == '1') {
 						$deletion_req = sprintf("%s has requested a deletion.", $key['part2']);
-						$triggered_by = $s;
 					}	
 				}
 				
@@ -136,7 +132,7 @@
 	
 	if(isset($_GET['cancel'])) {
 
-		$s = $_GET['cancel'];
+		$s = mysql_real_escape_string(htmlspecialchars($_GET['cancel']));
 		$u = $_SESSION['username'];
 		$q = "select * from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
 		$info = Database::query($q);
@@ -147,10 +143,8 @@
 		}
 
 		$q = "select * from chats where conversation='$table';";
-		
 		$info = Database::query($q);
-		$u = $_SESSION['username'];
-		$e = $_GET['cancel'];
+
 		if ($info) {
 			foreach($info as $key) {
 				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$u) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$u)) {
@@ -158,7 +152,7 @@
 					$q = "update chats set consent_of_deletion_p1='0',consent_of_deletion_p2='0' where conversation='$table';";
 					Database::exec($q);
 				}
-				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$e) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$e)) {
+				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$s) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$s)) {
 					// the logged user cancels a deletion request.
 					$q = "update chats set consent_of_deletion_p1='0',consent_of_deletion_p2='0' where conversation='$table';";
 					Database::exec($q);

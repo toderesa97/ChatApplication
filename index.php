@@ -12,18 +12,16 @@
 	$username = "";
 	$pass = "";
 	if (isset($_POST['username']) && isset($_POST['password'])) {
-		$username = htmlspecialchars($_POST['username']);
-		$pass = htmlspecialchars($_POST['password']);
+		$username = mysql_real_escape_string(htmlspecialchars($_POST['username']));
+		$pass = mysql_real_escape_string(htmlspecialchars($_POST['password']));
 		$logged = Database::check($username, $pass);
 		if ($logged) {
-			$_SESSION['username'] = $_POST['username'];
+			$_SESSION['username'] = $username;
 			header("Location: dashboard.php");
 		} else {
 			$msg = "Could not verify your identity";
 		}
 	}
-	
-	
 ?>
 
 <!DOCTYPE html>
@@ -55,15 +53,12 @@
 							<strong><i class="ion-alert-circled"></i></strong> <?php echo $msg; ?>
 						</div>
 		      		<?php endif; ?>
-		      		</div>  				
-				
+		      		</div>  						
 				</form>
 			</div>
 			<div class="col-lg-3"></div>
 		</div>
 		
 	</div>
-
-	
 </body>
 </html>

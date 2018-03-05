@@ -8,13 +8,10 @@ class Database {
 		try {
 			if (Database::$pdo == null) {
 				Database::$pdo = new PDO("mysql:host=127.0.0.1;dbname=prueba", 'root', '');
-			} else {
-				return Database::$pdo;
-			}
+			} 
 		} catch(Exception $e) {
 			Database::$pdo = null;
 		}
-		return Database::$pdo;
 	}
 
 	/* method fetchs directly all the query inserted by user */
@@ -38,6 +35,7 @@ class Database {
 	}	
 
 	public static function exists($user) {
+		$user = htmlspecialchars(mysql_real_escape_string($user));
 		$query = "select * from usuarios where username='$user';";
 		$info = Database::query($query);
 
