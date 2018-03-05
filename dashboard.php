@@ -1,5 +1,6 @@
 <?php
 	include_once 'lib.php';
+	include_once 'model/chatModel.php';
 
 	session_start();
 	if (! isset($_SESSION['username'])) {
@@ -10,72 +11,16 @@
 		$enableJTextField = "enabled";
 	}
 
-	$err = "";
 	
 	Database::getPDO(); // this line must be executed to create the PDO instance. Singleton pattern.
-
 	if (isset($_GET['erase'])) {
-		// pending
-		$e = htmlspecialchars(mysql_real_escape_string($_GET['erase']));
-		$u = $_SESSION['username'];
-		$q = sprintf("select * from chats where (part1='%s' and part2='%s') or (part1='%s' and part2='%s');",$e, $u, $u, $e);
-		$info = Database::query($q);
-		$conver = "";
-		if ($info) {
-			
-			foreach($info as $key) { 
-				$conver = $key['conversation']; 
-				if ($key['part1'] == $u) {
-					$q ="update chats set consent_of_deletion_p1='1' where conversation='$conver';";
-					Database::exec($q);
-				} else { // $key['part1'] == $e (started by the other part)
-					$q = "update chats set consent_of_deletion_p2='1' where conversation='$conver';";
-					Database::exec($q);
-				}
-				
-			}
-		}
-		$info = Database::query("select * from chats where conversation='$conver';");
-		if ($info) {
-			foreach($info as $key) {		
-				if ($key['consent_of_deletion_p2']=='1' && $key['consent_of_deletion_p1']=='1') {
-					$q = sprintf("delete from chats where conversation='%s'", $key['conversation']);
-					Database::exec($q);
-					Database::exec(sprintf("drop table %s", $key['conversation']));
-				}
-			}
-		}
+		ChatManagement::delete_chat($_GET['erase']);
 	}
 
-	$table = "";
-	/* creating and/or sending a message */
+	$err = "";
+	
 	if (isset($_POST['message']) && $_POST['message']!="" && Database::exists($_GET['sender'])) {
-		$s = htmlspecialchars(mysql_real_escape_string($_GET['sender']));
-		$u = $_SESSION['username'];
-		$q = sprintf("select * from chats where conversation='con_%s_%s' or conversation='con_%s_%s'", $s, $u, $u, $s);
-		$info = Database::query($q);
-		
-		if ($info) {
-			// chat exist, hence, insertion
-			foreach ($info as $key) {
-				if ($key['consent_of_deletion_p2'] == '1' || $key['consent_of_deletion_p1'] == '1') {
-					// do nothing.
-					$err = "Pending a deletion request.";
-				} else {
-					$q = "insert into ".$key['conversation']." (sender, recipient, msg, time) values ('".$u."','".$s."','".mysql_real_escape_string(htmlspecialchars($_POST['message']))."',now());";
-					Database::exec($q);
-				}
-				
-			}
-		} else {
-			$table = sprintf("con_%s_%s", $u, $s);
-			$q = "create table $table (sender varchar(60) not null, recipient varchar(60) not null, msg text not null, time timestamp);";
-			Database::exec($q);
-			$q = "insert into chats (part1, part2, conversation, consent_of_deletion_p1,consent_of_deletion_p2) values ('$u', '$s', '$table', '0', '0');";
-			Database::exec($q);
-			$q = sprintf("insert into $table (sender, recipient, msg, time) values ('$u','$s','%s',now());", mysql_real_escape_string(htmlspecialchars($_POST['message'])));
-			Database::exec($q);
-		}
+		$err = ChatManagement::send_message($_POST['message'], $_GET['sender']);
 	} else {
 		if (isset($_GET['sender'])) {
 			if (! Database::exists($_GET['sender'])) {
@@ -84,80 +29,22 @@
 		}
 	}
 
-	/* retrieving messages given two parts */
 	$messages = "";
 	$deletion_req = "";
 	if (isset($_GET['sender'])) {
-		$s = mysql_real_escape_string(htmlspecialchars($_GET['sender']));
-		$u = $_SESSION['username'];
-		$q = "select * from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
-		$info = Database::query($q);
-		
-		if ($info) {
-			foreach($info as $key) {
-				$table = $key['conversation'];
-				
-				if ($key['consent_of_deletion_p1'] == '1' || $key['consent_of_deletion_p2'] == '1') {
-					if ($key['part1'] == $u && $key['consent_of_deletion_p1'] == '1') {
-						$deletion_req = "You have requested a deletion.";
-					}
-					if ($key['part2'] == $u && $key['consent_of_deletion_p2'] == '1') {
-						$deletion_req = "You have requested a deletion.";
-					}
-					if ($key['part1'] == $s && $key['consent_of_deletion_p1'] == '1') {
-						$deletion_req = sprintf("%s has requested a deletion.", $key['part1']);
-					}
-					if ($key['part2'] == $s && $key['consent_of_deletion_p2'] == '1') {
-						$deletion_req = sprintf("%s has requested a deletion.", $key['part2']);
-					}	
-				}
-				
-			}
+		if (! Database::exists(mysql_real_escape_string(htmlspecialchars($_GET['sender'])))) {
+			$err = "Contact does not exist";
+		} else {
+			$out = ChatManagement::get_messages_with($_GET['sender']);
+			$messages = $out[0];
+			$deletion_req = $out[1];
 		}
-		$q = "select * from ".$table." order by time;";
-		$info = Database::query($q);
-
-		if ($info) {
-			foreach ($info as $key) {
-				// messages sent by sender (the user logged in) are colored in blue whereas the sent back by the recipient in grey.
-				if ($key['recipient'] == $_SESSION['username']) { 
-					$messages .= '<div class="row"><div class="col-lg-12 flex-right"><i class="ion-chevron-left"></i><p class="msg by-sender">'.$key['msg'].'</p><p class="msg-time">'.$key['time'].'</p></div></div>';
-				} else {
-					$messages .= '<div class="row"><div class="col-lg-12 flex-left"><p class="msg-time">'.$key['time'].'</p><p class="msg by-recipient">'.$key['msg'].'</p><i class="ion-chevron-right"></i></div></div>';
-				}
-			}
-		} 
-
 	}
 	
 	if(isset($_GET['cancel'])) {
-
-		$s = mysql_real_escape_string(htmlspecialchars($_GET['cancel']));
-		$u = $_SESSION['username'];
-		$q = "select * from chats where conversation='con_".$u."_".$s."' or conversation='con_".$s."_".$u."';";
-		$info = Database::query($q);
-		if ($info) {
-			foreach($info as $key) {
-				$table = $key['conversation'];
-			}
-		}
-
-		$q = "select * from chats where conversation='$table';";
-		$info = Database::query($q);
-
-		if ($info) {
-			foreach($info as $key) {
-				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$u) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$u)) {
-					// the logged user cancels a deletion request.
-					$q = "update chats set consent_of_deletion_p1='0',consent_of_deletion_p2='0' where conversation='$table';";
-					Database::exec($q);
-				}
-				if (($key['consent_of_deletion_p1']=='1' && $key['part1']==$s) || ($key['consent_of_deletion_p2']=='1' && $key['part2']==$s)) {
-					// the logged user cancels a deletion request.
-					$q = "update chats set consent_of_deletion_p1='0',consent_of_deletion_p2='0' where conversation='$table';";
-					Database::exec($q);
-				}
-			}
+		if (! Database::exists($_GET['cancel'])) {
+		} else {		
+			ChatManagement::cancel_deletion_with($_GET['cancel']);
 		}
 	}
 ?>
