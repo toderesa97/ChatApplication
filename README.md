@@ -11,7 +11,7 @@ The aim of these commits is to create a first viable version.
 
 Any contributor will be welcomed :).
 
-Some screenshots of a previous version: 
+Some screenshots: 
 
 ## Login
 
@@ -25,17 +25,11 @@ Some screenshots of a previous version:
 
 ![searchuser](https://user-images.githubusercontent.com/19231158/36937068-191143da-1f0e-11e8-9098-ecc84d08f688.PNG)
 
-### Sending the msg
+### Sending the msg (note the status)
 
-![firstmsg](https://user-images.githubusercontent.com/19231158/36937065-18a806c2-1f0e-11e8-93c1-2d36cd6aacb1.PNG)
+![statusservice](https://user-images.githubusercontent.com/19231158/37064561-c48d8980-219d-11e8-92de-2c7333e159ba.PNG)
 
-## What user *juan* see when he logs in. (user needs to click on the conversation before)
-
-![whatjuansee](https://user-images.githubusercontent.com/19231158/36937069-19382446-1f0e-11e8-87df-851bfb5d0254.PNG)
-
-Screenshots of new version:
-
-A conversation is deleted if and only if both parts do agree. 
+### A conversation is deleted if and only if both parts do agree. 
 
 ![gnralconver](https://user-images.githubusercontent.com/19231158/36948418-c2caadea-1fda-11e8-9d99-79c09c6ad587.PNG)
 
