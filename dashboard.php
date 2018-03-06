@@ -72,35 +72,10 @@
 				</div>
 				<div id="contacts">
 					<?php
-						$p1 = $_SESSION['username'];
-						
-						$q = "select part1, part2 from chats where part1='".$p1."' or part2='".$p1."' order by creation_date;";
-						$info = Database::query($q);
-
-						/* echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['sender'].'">'.$key['sender'].'</a>';*/
-						$active="";
-						if (isset($_GET['sender'])) {
-							$active = $_GET['sender'];
+						$contacts = ChatManagement::get_contacts($_GET['sender']);
+						if (! empty($contacts[1])) {
+							echo $contacts[1];
 						}
-						if ($info) {
-							foreach ($info as $key) {
-								if ($key['part1'] == $p1) {
-									if ($active == $key['part2']) {
-										echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['part2'].'">'.$key['part2'].'</a>';
-									} else {
-										echo '<a class="sender-msg" href="dashboard.php?sender='.$key['part2'].'">'.$key['part2'].'</a>';
-									}
-								} else {
-									if ($active == $key['part1']) {
-										echo '<a class="sender-msg active" href="dashboard.php?sender='.$key['part1'].'">'.$key['part1'].'</a>';
-
-									} else {
-										echo '<a class="sender-msg" href="dashboard.php?sender='.$key['part1'].'">'.$key['part1'].'</a>';										
-									}
-								}
-							}
-						}
-
 					?>
 				</div>
 			</div>

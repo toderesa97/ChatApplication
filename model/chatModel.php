@@ -38,6 +38,45 @@ class ChatManagement {
 		
 	}
 
+	/**
+	* This method retrieves the users that are maintaining a chat with the logged user.
+	* $active represent a selected user in a conversation.
+	* 
+	*/
+	public static function get_contacts($active) {
+		$logged = $_SESSION['username'];
+		$q = sprintf("select part1, part2 from chats where (part1='%s' or part2='%s');", $logged, $logged);
+		$info = Database::query($q);
+		if (isset($active)) {
+			if (Database::exists($active)) {
+
+			} else {
+				$active = "";
+			}
+		}
+		$out = "";
+		if ($info) {
+			foreach($info as $key) {
+				if ($key['part1'] == $logged) {
+					if ($key['part2'] == $active) {
+						$out .= sprintf('<a class="sender-msg active" href="dashboard.php?sender=%s">%s</a>', $key['part2'], $key['part2']);
+					} else {
+						$out .= sprintf('<a class="sender-msg" href="dashboard.php?sender=%s">%s</a>', $key['part2'], $key['part2']);
+					}
+				} else { // $key['part2'] == $logged 
+					if ($key['part1'] == $active) {
+						$out .= sprintf('<a class="sender-msg active" href="dashboard.php?sender=%s">%s</a>', $key['part1'], $key['part1']);
+					} else {
+						$out .= sprintf('<a class="sender-msg" href="dashboard.php?sender=%s">%s</a>', $key['part1'], $key['part1']);
+					}
+				}
+			}
+			return array(true, $out);
+		} else {
+			return array(false, "No chats are open.");
+		}
+	}
+
 	// return $err
 	public static function send_message($message, $contact) {
 		$s = htmlspecialchars(mysql_real_escape_string($_GET['sender']));
