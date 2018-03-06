@@ -11,6 +11,18 @@
 		$enableJTextField = "enabled";
 	}
 
+	if (isset($_GET['sender'])) {
+		$GLOBALS['sender'] = $_GET['sender'];
+	} else {
+		$GLOBALS['sender'] = "";
+	}
+
+	if(isset($_GET['cancel'])) {
+		$GLOBALS['cancel'] = $_GET['cancel'];
+	} else {
+		$GLOBALS['cancel'] = "";
+	}
+
 	
 	Database::getPDO(); // this line must be executed to create the PDO instance. Singleton pattern.
 	if (isset($_GET['erase'])) {
@@ -19,34 +31,31 @@
 
 	$err = "";
 	
-	if (isset($_POST['message']) && $_POST['message']!="" && Database::exists($_GET['sender'])) {
-		$err = ChatManagement::send_message($_POST['message'], $_GET['sender']);
+	if (isset($_POST['message']) &&  !empty($_POST['message']) && Database::exists($GLOBALS['sender'])) {
+		$err = ChatManagement::send_message($_POST['message'], $GLOBALS['sender']);
 	} else {
-		if (isset($_GET['sender'])) {
-			if (! Database::exists($_GET['sender'])) {
-				$err .= "\nUser does not exist";
+		if (isset($_POST['message'])) {
+			if (empty($_POST['message'])) {
+				$err .= "\nCannot send empty message.";
 			}
 		}
 	}
 
 	$messages = "";
 	$deletion_req = "";
-	if (isset($_GET['sender'])) {
-		if (! Database::exists(mysql_real_escape_string(htmlspecialchars($_GET['sender'])))) {
-			$err = "Contact does not exist";
-		} else {
-			$out = ChatManagement::get_messages_with($_GET['sender']);
-			$messages = $out[0];
-			$deletion_req = $out[1];
-		}
+	
+	if (! empty($GLOBALS['sender'])) {
+		$out = ChatManagement::get_messages_with($GLOBALS['sender']);
+		$messages = $out[0];
+		$deletion_req = $out[1];
+	} 
+	
+	
+	if (! Database::exists($GLOBALS['cancel'])) {
+	} else {		
+		ChatManagement::cancel_deletion_with($GLOBALS['cancel']);
 	}
 	
-	if(isset($_GET['cancel'])) {
-		if (! Database::exists($_GET['cancel'])) {
-		} else {		
-			ChatManagement::cancel_deletion_with($_GET['cancel']);
-		}
-	}
 ?>
 
 <!DOCTYPE html>
@@ -72,7 +81,7 @@
 				</div>
 				<div id="contacts">
 					<?php
-						$contacts = ChatManagement::get_contacts($_GET['sender']);
+						$contacts = ChatManagement::get_contacts($GLOBALS['sender']);
 						if (! empty($contacts[1])) {
 							echo $contacts[1];
 						}

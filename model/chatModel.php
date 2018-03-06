@@ -47,13 +47,13 @@ class ChatManagement {
 		$logged = $_SESSION['username'];
 		$q = sprintf("select part1, part2 from chats where (part1='%s' or part2='%s');", $logged, $logged);
 		$info = Database::query($q);
-		if (isset($active)) {
-			if (Database::exists($active)) {
+		
+		if (Database::exists($active)) {
 
-			} else {
-				$active = "";
-			}
+		} else {
+			$active = "";
 		}
+		
 		$out = "";
 		if ($info) {
 			foreach($info as $key) {
@@ -79,7 +79,7 @@ class ChatManagement {
 
 	// return $err
 	public static function send_message($message, $contact) {
-		$s = htmlspecialchars(mysql_real_escape_string($_GET['sender']));
+		$s = htmlspecialchars(mysql_real_escape_string($contact));
 		$u = $_SESSION['username'];
 		$q = sprintf("select * from chats where conversation='con_%s_%s' or conversation='con_%s_%s'", $s, $u, $u, $s);
 		$info = Database::query($q);
