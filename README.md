@@ -31,8 +31,6 @@ Some screenshots:
 
 ### A conversation is deleted if and only if both parts do agree. 
 
-![gnralconver](https://user-images.githubusercontent.com/19231158/36948418-c2caadea-1fda-11e8-9d99-79c09c6ad587.PNG)
-
 ![deletionmodal](https://user-images.githubusercontent.com/19231158/36948417-c2a855c4-1fda-11e8-9b5f-fb83341c600d.PNG)
 
 ![aftersendingdeletion](https://user-images.githubusercontent.com/19231158/36948416-c286727e-1fda-11e8-8feb-c5de5020dc65.PNG)
