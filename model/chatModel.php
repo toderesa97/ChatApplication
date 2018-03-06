@@ -107,13 +107,22 @@ class ChatManagement {
 		}
 		return $err;
 	}
-
+	
 	public static function get_messages_with($contact) {
 		$s = mysql_real_escape_string(htmlspecialchars($contact));
 		if (! Database::exists($s)) {
 			return array(false, "Contact does not exist");
 		}
 		$u = $_SESSION['username'];
+		$q = "select last_act, is_online from usuarios where username='$s';";
+		$info = Database::query($q);
+		if ($info) {
+			foreach($info as $key) {
+				$is_online = $key['is_online'];
+				$last_act = $key['last_act'];
+			}
+		}
+
 		$q = sprintf("select * from chats where conversation='con_%s_%s' or conversation='con_%s_%s';", $u, $s, $s, $u);
 		$info = Database::query($q);
 		$table = "";
@@ -153,7 +162,7 @@ class ChatManagement {
 				}
 			}
 		} 
-		return empty($deletion_req) ? array($messages, "") : array($messages, $deletion_req);
+		return empty($deletion_req) ? array($messages, "", $is_online, $last_act) : array($messages, $deletion_req, $is_online, $last_act);
 	}
 
 	public static function cancel_deletion_with($contact) {

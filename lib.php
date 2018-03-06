@@ -23,6 +23,8 @@ class Database {
 		if ($info) {
 			foreach ($info as $key) {
 				if ($key['username'] == $user && $key['password'] == $pass) {
+					$q = sprintf("update usuarios set last_act=now(), is_online='1' where username='%s'", $user);
+					Database::exec($q);
 					return true;
 				} else {
 					sleep(1);

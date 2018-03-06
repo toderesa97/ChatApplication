@@ -2,7 +2,9 @@
 	include_once 'lib.php';
 	include_once 'model/chatModel.php';
 
+	Database::getPDO();
 	session_start();
+
 	if (! isset($_SESSION['username'])) {
 		header("Location: index.php");
 	}
@@ -22,9 +24,7 @@
 	} else {
 		$GLOBALS['cancel'] = "";
 	}
-
 	
-	Database::getPDO(); // this line must be executed to create the PDO instance. Singleton pattern.
 	if (isset($_GET['erase'])) {
 		ChatManagement::delete_chat($_GET['erase']);
 	}
@@ -43,11 +43,18 @@
 
 	$messages = "";
 	$deletion_req = "";
-	
+	$is_online = "";
+	$last_act = "";
 	if (! empty($GLOBALS['sender'])) {
 		$out = ChatManagement::get_messages_with($GLOBALS['sender']);
 		$messages = $out[0];
 		$deletion_req = $out[1];
+		if (! $messages) {
+
+		} else {
+			$is_online = $out[2];
+			$last_act = $out[3];
+		}
 	} 
 	
 	
@@ -90,6 +97,13 @@
 			</div>
 			<div class="col-lg-9 message-area">
 				<div id="show-text">
+					<?php
+						if ($is_online == "0") {
+							echo sprintf('<p style="text-align: center;">Last seen %s</p>', $last_act);
+						} else if ($is_online == "1") {
+							echo '<p style="text-align: center;">Online</p>';
+						}
+					?>
 					<?php if($messages != ""){ echo $messages;} ?>
 					
 				</div>
